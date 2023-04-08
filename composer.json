@@ -1,0 +1,27 @@
+{
+    "name": "paulklein/projet_api",
+    "description": "Projet d'API REST",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "PaulKl10",
+            "email": "paul.klein43@gmail.com"
+        }
+    ],
+    "require": {
+        "symfony/dotenv": "^4.4"
+    },
+    "scripts": {
+        "start": "/Applications/MAMP/bin/php/php8.0.8/bin/php -S localhost:8000 -t public/ public/index.php"
+    },
+    "config": {
+        "process-timeout": 0,
+        "platform": {
+            "php": "/Applications/MAMP/bin/php/php8.0.8/bin/php"
+        }
+    }
+}
