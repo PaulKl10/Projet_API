@@ -4,8 +4,8 @@ require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Config\Dbinitializer;
 use App\Config\ExceptionHandlerInitializer;
-use App\Crud\Exception\UnprocessableEntityException;
-use App\Crud\ProductCrud;
+use App\Crud\MovieCrud;
+use App\Crud\UserCrud;
 use Symfony\Component\Dotenv\Dotenv;
 
 header("Content-Type: application/json");
@@ -20,31 +20,53 @@ $uri = $_SERVER['REQUEST_URI'];
 $httpMethod = $_SERVER['REQUEST_METHOD'];
 $uri = explode("/", $uri);
 $data = json_decode(file_get_contents("php://input"), true);
-$productsCrud = new ProductCrud($pdo);
 
 
 if (count($uri) === 2) {
-    if ($uri[1] === 'products') {
-        // Affichage de tous les products
+    if ($uri[1] === 'movies') {
+        $movieCrud = new MovieCrud($pdo);
+        // Affichage de tous les films
         if ($httpMethod === 'GET') {
-            echo json_encode($productsCrud->findAll());
+            echo json_encode($movieCrud->findAll());
         }
-        // Création d'un produit
+        // Création d'un film
         if ($httpMethod === 'POST') {
             try {
-                $productsCrud->create($data);
+                $movieCrud->create($data);
                 http_response_code(201);
                 $insertedProductId = $pdo->lastInsertId();
                 echo json_encode([
-                    'uri' => '/products/' . $insertedProductId
+                    'Successfully add movie'
                 ]);
-            } catch (UnprocessableEntityException $e) {
+            } catch (Exception $e) {
                 http_response_code(422);
                 echo json_encode([
                     'error' => $e->getMessage()
                 ]);
                 exit;
-            } finally {
+            }
+        }
+    }
+    if ($uri[1] === 'users') {
+        $userCrud = new UserCrud($pdo);
+        // Affichage de tous les utilisateurs
+        if ($httpMethod === 'GET') {
+            echo json_encode($userCrud->findAll());
+        }
+        // Création d'un film
+        if ($httpMethod === 'POST') {
+            try {
+                $userCrud->create($data);
+                http_response_code(201);
+                $insertedProductId = $pdo->lastInsertId();
+                echo json_encode([
+                    'Successfully add user'
+                ]);
+            } catch (Exception $e) {
+                http_response_code(422);
+                echo json_encode([
+                    'error' => $e->getMessage()
+                ]);
                 exit;
             }
         }
@@ -52,7 +74,7 @@ if (count($uri) === 2) {
     exit;
 }
 
-// Ressource seule, tupe /products/{id}
+// Ressource seule, tupe /movies/{id}
 $isItemOperation = count($uri) === 3;
 
 
@@ -64,36 +86,82 @@ if (!$isItemOperation) {
 }
 
 if ($isItemOperation) {
-    if ($uri[1] === 'products') {
+    if ($uri[1] === 'movies') {
+        $movieCrud = new MovieCrud($pdo);
         if ($httpMethod === 'GET') {
-            $query = "SELECT * FROM products WHERE id = :id";
-            $stmt = $pdo->prepare($query);
-            $stmt->execute([
-                'id' => $uri[2]
-            ]);
-            echo json_encode($stmt->fetchAll(\PDO::FETCH_ASSOC));
+            echo json_encode($movieCrud->find($uri[2]));
         }
 
         if ($httpMethod === 'PUT') {
-            $query = "UPDATE products SET name = :product_name, priceHT = :priceHT, description = :desc_product WHERE id = :id";
-            $stmt = $pdo->prepare($query);
-            $stmt->execute([
-                'product_name' => $data['name'],
-                'priceHT' => $data['priceHT'],
-                'desc_product' => $data['description'],
-                'id' => $uri[2]
-            ]);
-            echo "success update products";
-            http_response_code(204);
+            try {
+                $movieCrud->update($uri[2], $data);
+                http_response_code(202);
+                echo json_encode([
+                    "Successfully updated movie"
+                ]);
+            } catch (Exception $e) {
+                http_response_code(422);
+                echo json_encode([
+                    'error' => $e->getMessage()
+                ]);
+            } finally {
+                exit;
+            }
         }
 
         if ($httpMethod === 'DELETE') {
-            $query = "DELETE FROM products WHERE id = :id";
-            $stmt = $pdo->prepare($query);
-            $stmt->execute([
-                'id' => $uri[2]
-            ]);
-            echo "success delete products";
+            try {
+                $movieCrud->delete($uri[2]);
+                http_response_code(202);
+                echo json_encode([
+                    "Successfully delete movie"
+                ]);
+            } catch (Exception $e) {
+                echo json_encode([
+                    'error' => $e->getMessage()
+                ]);
+            } finally {
+                exit;
+            }
+        }
+    }
+    if ($uri[1] === 'users') {
+        $userCrud = new UserCrud($pdo);
+        if ($httpMethod === 'GET') {
+            echo json_encode($userCrud->find($uri[2]));
+        }
+
+        if ($httpMethod === 'PUT') {
+            try {
+                $userCrud->update($uri[2], $data);
+                http_response_code(202);
+                echo json_encode([
+                    "Successfully updated user"
+                ]);
+            } catch (Exception $e) {
+                http_response_code(422);
+                echo json_encode([
+                    'error' => $e->getMessage()
+                ]);
+            } finally {
+                exit;
+            }
+        }
+
+        if ($httpMethod === 'DELETE') {
+            try {
+                $userCrud->delete($uri[2]);
+                http_response_code(202);
+                echo json_encode([
+                    "Successfully delete user"
+                ]);
+            } catch (Exception $e) {
+                echo json_encode([
+                    'error' => $e->getMessage()
+                ]);
+            } finally {
+                exit;
+            }
         }
     }
 }
